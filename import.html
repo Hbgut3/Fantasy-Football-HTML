@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Excel Table on Website</title>
+  <!-- DataTables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+</head>
+<body>
+  <h1>My Excel Data</h1>
+  <table id="myTable" class="display" style="width:100%">
+      <thead>
+        <tr id="tableHeader"></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+  </table>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <!-- DataTables JS -->
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script>
+    // Load CSV file
+    $.get("data.csv", function(csvString) {
+        // Convert CSV to array of rows
+        const rows = csvString.split("\n").map(r => r.split(","));
+        
+        // Create table header
+        const header = rows[0];
+        header.forEach(h => $("#tableHeader").append(`<th>${h}</th>`));
+
+        // Create table body
+        rows.slice(1).forEach(row => {
+            let rowHtml = "<tr>";
+            row.forEach(cell => { rowHtml += `<td>${cell}</td>`; });
+            rowHtml += "</tr>";
+            $("#tableBody").append(rowHtml);
+        });
+
+        // Initialize DataTables
+        $('#myTable').DataTable();
+    });
+  </script>
+</body>
+</html>
