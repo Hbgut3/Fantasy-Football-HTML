@@ -5,12 +5,13 @@
 <title>Fantasy Points Week 6</title>
 <style>
   body { font-family: Arial, sans-serif; margin: 20px; }
-  .tab { cursor: pointer; padding: 10px 15px; background: #eee; display: inline-block; margin-right: 2px; border-radius: 5px 5px 0 0; }
+  .tab { cursor: pointer; padding: 10px 15px; background: #eee; display: inline-block; margin-right: 2px; border-radius: 5px 5px 0 0; transition: background 0.2s; }
+  .tab:hover { background: #ddd; }
   .tab.active { background: #ccc; font-weight: bold; }
   .content { display: block; margin-top: 10px; }
-  table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-  th, td { border: 1px solid #333; padding: 5px; text-align: left; }
-  th { background: #f0f0f0; }
+  table { border-collapse: collapse; width: 100%; overflow-x: auto; display: block; margin-top: 10px; }
+  th, td { border: 1px solid #333; padding: 5px; text-align: left; white-space: nowrap; }
+  th { background: #f0f0f0; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -21,6 +22,7 @@
 
 <script>
 const teams = ["Hayden","Tanner","Pat","Riley","Trey","Ultron","Waivers"];
+let currentTeam = teams[0]; // track current team for sorting headers
 
 // Create tab buttons
 const tabsDiv = document.getElementById("tabs");
@@ -32,39 +34,58 @@ teams.forEach(team => {
   tabsDiv.appendChild(btn);
 });
 
+// Custom position order
+const positionOrder = ["QB","RB","WR","TE"];
+
 // Show a team
 async function showTeam(team) {
+  currentTeam = team;
+  
   // Remove active class from all tabs
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   Array.from(tabsDiv.children).find(t => t.textContent === team).classList.add("active");
 
   // Load JSON
   const response = await fetch(team + ".json");
-  const data = await response.json();
+  let data = await response.json();
 
-  // Build HTML table
   if (data.length === 0) {
     document.getElementById("content").innerHTML = "<p>No players found.</p>";
     return;
   }
 
+  // Sort first by position (custom order) then Fantasy Points descending
+  data.sort((a,b) => {
+    const posA = positionOrder.indexOf(a["Position"]);
+    const posB = positionOrder.indexOf(b["Position"]);
+    const posOrderA = posA === -1 ? positionOrder.length : posA;
+    const posOrderB = posB === -1 ? positionOrder.length : posB;
+    if (posOrderA !== posOrderB) return posOrderA - posOrderB;
+    return b["Fantasy Points"] - a["Fantasy Points"];
+  });
+
+  // Highlight top Fantasy Points
+  const maxPoints = Math.max(...data.map(p => p["Fantasy Points"]));
+
+  // Build table HTML
   let html = "<table><tr>";
   for (let key of Object.keys(data[0])) html += `<th>${key}</th>`;
   html += "</tr>";
 
   data.forEach(row => {
-    html += "<tr>";
+    const isTop = row["Fantasy Points"] === maxPoints;
+    html += `<tr${isTop ? ' style="background-color: #ffeb3b;"' : ''}>`;
     for (let key of Object.keys(row)) html += `<td>${row[key]}</td>`;
     html += "</tr>";
   });
-  html += "</table>";
 
   document.getElementById("content").innerHTML = html;
 }
 
 // Show first team by default
-showTeam(teams[0]);
+showTeam(currentTeam);
 </script>
 
 </body>
 </html>
+
