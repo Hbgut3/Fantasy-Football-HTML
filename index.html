@@ -8,21 +8,24 @@
   .tab { cursor: pointer; padding: 10px 15px; background: #eee; display: inline-block; margin-right: 2px; border-radius: 5px 5px 0 0; transition: background 0.2s; }
   .tab:hover { background: #ddd; }
   .tab.active { background: #ccc; font-weight: bold; }
-  .content { display: block; margin-top: 10px; }
+  #searchBar { margin-top: 10px; padding: 5px; width: 300px; }
   table { border-collapse: collapse; width: 100%; overflow-x: auto; display: block; margin-top: 10px; }
   th, td { border: 1px solid #333; padding: 5px; text-align: left; white-space: nowrap; }
-  th { background: #f0f0f0; cursor: pointer; }
+  th { background: #f0f0f0; }
 </style>
 </head>
 <body>
 
 <h1>Fantasy Points Week 6</h1>
+
 <div id="tabs"></div>
+<input type="text" id="searchBar" placeholder="Search player by name..." onkeyup="filterTable()">
 <div id="content"></div>
 
 <script>
 const teams = ["Hayden","Tanner","Pat","Riley","Trey","Ultron","Waivers"];
-let currentTeam = teams[0]; // track current team for sorting headers
+let currentTeam = teams[0]; // track current team
+let currentData = []; // store current team's data for filtering
 
 // Create tab buttons
 const tabsDiv = document.getElementById("tabs");
@@ -48,13 +51,19 @@ async function showTeam(team) {
   // Load JSON
   const response = await fetch(team + ".json");
   let data = await response.json();
+  currentData = data; // store for filtering
 
+  renderTable(data);
+}
+
+// Render table function
+function renderTable(data) {
   if (data.length === 0) {
     document.getElementById("content").innerHTML = "<p>No players found.</p>";
     return;
   }
 
-  // Sort first by position (custom order) then Fantasy Points descending
+  // Sort by position then Fantasy Points
   data.sort((a,b) => {
     const posA = positionOrder.indexOf(a["Position"]);
     const posB = positionOrder.indexOf(b["Position"]);
@@ -67,7 +76,6 @@ async function showTeam(team) {
   // Highlight top Fantasy Points
   const maxPoints = Math.max(...data.map(p => p["Fantasy Points"]));
 
-  // Build table HTML
   let html = "<table><tr>";
   for (let key of Object.keys(data[0])) html += `<th>${key}</th>`;
   html += "</tr>";
@@ -80,6 +88,13 @@ async function showTeam(team) {
   });
 
   document.getElementById("content").innerHTML = html;
+}
+
+// Search/filter function
+function filterTable() {
+  const query = document.getElementById("searchBar").value.toLowerCase();
+  const filtered = currentData.filter(player => player["Name"].toLowerCase().includes(query));
+  renderTable(filtered);
 }
 
 // Show first team by default
