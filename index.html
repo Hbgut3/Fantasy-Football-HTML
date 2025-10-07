@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fantasy Points Week 6</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  .tab { cursor: pointer; padding: 10px 15px; background: #eee; display: inline-block; margin-right: 2px; border-radius: 5px 5px 0 0; }
+  .tab.active { background: #ccc; font-weight: bold; }
+  .content { display: block; margin-top: 10px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+  th, td { border: 1px solid #333; padding: 5px; text-align: left; }
+  th { background: #f0f0f0; }
+</style>
+</head>
+<body>
+
+<h1>Fantasy Points Week 6</h1>
+<div id="tabs"></div>
+<div id="content"></div>
+
+<script>
+const teams = ["Hayden","Tanner","Pat","Riley","Trey","Ultron","Waivers"];
+
+// Create tab buttons
+const tabsDiv = document.getElementById("tabs");
+teams.forEach(team => {
+  const btn = document.createElement("div");
+  btn.className = "tab";
+  btn.textContent = team;
+  btn.onclick = () => showTeam(team);
+  tabsDiv.appendChild(btn);
+});
+
+// Show a team
+async function showTeam(team) {
+  // Remove active class from all tabs
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  Array.from(tabsDiv.children).find(t => t.textContent === team).classList.add("active");
+
+  // Load JSON
+  const response = await fetch(team + ".json");
+  const data = await response.json();
+
+  // Build HTML table
+  if (data.length === 0) {
+    document.getElementById("content").innerHTML = "<p>No players found.</p>";
+    return;
+  }
+
+  let html = "<table><tr>";
+  for (let key of Object.keys(data[0])) html += `<th>${key}</th>`;
+  html += "</tr>";
+
+  data.forEach(row => {
+    html += "<tr>";
+    for (let key of Object.keys(row)) html += `<td>${row[key]}</td>`;
+    html += "</tr>";
+  });
+  html += "</table>";
+
+  document.getElementById("content").innerHTML = html;
+}
+
+// Show first team by default
+showTeam(teams[0]);
+</script>
+
+</body>
+</html>
